@@ -1,6 +1,6 @@
 package com.example.Coffee.service.serviceImpl;
 
-import com.example.Coffee.UserRepository;
+import com.example.Coffee.repository.UserRepository;
 import com.example.Coffee.model.User;
 import com.example.Coffee.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

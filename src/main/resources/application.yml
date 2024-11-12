@@ -17,11 +17,17 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update  # T�y ch?n: none, update, create, create-drop
-    show-sql: true  # Hi?n th? c�u l?nh SQL
+    show-sql: false  # Hi?n th? c�u l?nh SQL
     database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         format_sql: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 logging:
   level:

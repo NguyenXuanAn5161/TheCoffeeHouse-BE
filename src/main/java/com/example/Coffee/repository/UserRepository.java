@@ -1,4 +1,4 @@
-package com.example.Coffee;
+package com.example.Coffee.repository;
 
 import com.example.Coffee.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
