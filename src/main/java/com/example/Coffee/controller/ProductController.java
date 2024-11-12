@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -35,21 +37,33 @@ public class ProductController {
     public ResponseEntity<ApiResponse<String>> createProduct(@RequestParam("name") String name,
                                                              @RequestParam("description") String description,
                                                              @RequestParam("quantity") int quantity,
-                                                             @RequestParam("size") String size,
-                                                             @RequestParam("price") double price,
                                                              @RequestParam("category") String category,
-                                                             @RequestParam("image") MultipartFile image) {
+                                                             @RequestParam("image") MultipartFile image,
+                                                             @RequestParam("sizeS") Double sizeS,
+                                                             @RequestParam("sizeM") Double sizeM,
+                                                             @RequestParam("sizeL") Double sizeL) {
         try {
-            String result = productService.createProduct(name, description, quantity, size, price, category, image);
+            // Kiểm tra xem file ảnh có được gửi lên không
             if (image.isEmpty()) {
                 return new ResponseEntity<>(new ApiResponse<>(false, "File ảnh không được để trống", null), HttpStatus.BAD_REQUEST);
             }
+
+            // Tạo một map giá cho từng kích thước
+            Map<String, Double> sizePrice = new HashMap<>();
+            sizePrice.put("S", sizeS);
+            sizePrice.put("M", sizeM);
+            sizePrice.put("L", sizeL);
+
+            // Gọi service để thêm sản phẩm vào cơ sở dữ liệu
+            String result = productService.createProduct(name, description, quantity, sizePrice, category, image);
+
             if (result.equals("Sản phẩm đã được tạo thành công")) {
                 return new ResponseEntity<>(new ApiResponse<>(true, result, null), HttpStatus.CREATED);
             }
-            return new ResponseEntity<>(new ApiResponse<>(result), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResponse<>(false, result, null), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResponse<>("Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

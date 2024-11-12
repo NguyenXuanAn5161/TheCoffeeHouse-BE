@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ProductServiceImpl implements ProductService {
+    public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
@@ -43,18 +43,19 @@ public class ProductServiceImpl implements ProductService {
 
     // Method to handle creating product and storing image
     @Override
-    public String createProduct(String name, String description, int quantity, String size, double price, String category, MultipartFile image) {
+    public String createProduct(String name, String description, int quantity,
+                                Map<String, Double> sizePrice, String category, MultipartFile image) {
         try {
-            // Lưu hình ảnh
-            ResponseEntity<String> imageUrl = uploadImage(image);
-            String link = getImageUrl(imageUrl);
-            // Tạo sản phẩm
+            // Upload hình ảnh lên Imgur
+            ResponseEntity<String> imageUrlResponse = uploadImage(image);
+            String link = getImageUrl(imageUrlResponse);
+
+            // Tạo đối tượng Product
             Product product = new Product();
             product.setName(name);
             product.setDescription(description);
             product.setQuantity(quantity);
-            product.setSize(size);
-            product.setPrice(price);
+            product.setSizePrice(sizePrice); // Đặt thông tin size và giá
             product.setCategory(category);
             product.setImageUrl(link);
             product.setCreatedAt(new Date());
@@ -67,6 +68,7 @@ public class ProductServiceImpl implements ProductService {
             return "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage();
         }
     }
+
 
     private static final String IMGUR_API_URL = "https://api.imgur.com/3/upload";
     private static final String CLIENT_ID = "YOUR_IMGUR_CLIENT_ID"; // Thay bằng Client ID của bạn
