@@ -18,10 +18,29 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column
+    private String fullName; // Họ tên của người dùng
+
+    @Column(unique = true)
+    private String phoneNumber; // Số điện thoại
+
+    @Column
+    private String address; // Địa chỉ
+
+    // Constructor có tham số
+    public User(String username, String password, String fullName, String phoneNumber, String address) {
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+    }
+
     public User(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
-    public User() {};
+    // Constructor không tham số
+    public User() {}
 }

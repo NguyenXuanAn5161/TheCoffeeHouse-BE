@@ -34,4 +34,18 @@ public class UserServiceImpl implements UserService {
        }
        return Optional.empty();
     }
+
+    @Override
+    public User updateUser(Long userId, String fullName, String phoneNumber, String address) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại!"));
+
+        // Cập nhật thông tin người dùng
+        user.setFullName(fullName);
+        user.setPhoneNumber(phoneNumber);
+        user.setAddress(address);
+
+        return userRepository.save(user);
+    }
+
 }
