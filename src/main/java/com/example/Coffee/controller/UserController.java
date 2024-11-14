@@ -54,4 +54,15 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
+
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@RequestParam Long id) {
+        try {
+            Optional<User> user = userService.getUserById(id);
+            UserDto userDto = new UserDto(user); // Chuyển đổi sang UserDTO
+            return ResponseEntity.ok(new ApiResponse<>(true, "Lấy thông tin thành công!", userDto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
 }
