@@ -55,14 +55,14 @@ public class UserController {
         }
     }
 
-    @GetMapping("/user")
-    public ResponseEntity<ApiResponse<UserDto>> getUserById(@RequestParam Long id) {
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long userId) {
         try {
-            Optional<User> user = userService.getUserById(id);
+            User user = userService.getUserById(userId);
             UserDto userDto = new UserDto(user); // Chuyển đổi sang UserDTO
             return ResponseEntity.ok(new ApiResponse<>(true, "Lấy thông tin thành công!", userDto));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Không tìm thấy!", null));
         }
     }
 }
