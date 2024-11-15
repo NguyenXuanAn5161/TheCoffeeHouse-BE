@@ -21,8 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-    public class ProductServiceImpl implements ProductService {
-
+public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
 
@@ -73,6 +72,7 @@ import java.util.Map;
     private static final String IMGUR_API_URL = "https://api.imgur.com/3/upload";
     private static final String CLIENT_ID = "YOUR_IMGUR_CLIENT_ID"; // Thay bằng Client ID của bạn
 
+    @Override
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             // Chuyển file thành byte array
@@ -136,5 +136,27 @@ import java.util.Map;
             return "Sản phẩm đã được xóa thành công";
         }
         return "Không tìm thấy sản phẩm với ID: " + id;
+    }
+
+    @Override
+    public String createProductWithLinkImg(String name, String description, int quantity, Map<String, Double> sizePrice, String category, String imageUrl) {
+        try {
+            // Tạo đối tượng Product
+            Product product = new Product();
+            product.setName(name);
+            product.setDescription(description);
+            product.setQuantity(quantity);
+            product.setSizePrice(sizePrice);  // Set thông tin size và giá
+            product.setCategory(category);
+            product.setImageUrl(imageUrl);  // Set link ảnh
+            product.setCreatedAt(new java.util.Date());
+            product.setUpdatedAt(new java.util.Date());
+
+            // Lưu sản phẩm vào cơ sở dữ liệu
+            productRepository.save(product);
+            return "Sản phẩm đã được tạo thành công";
+        } catch (Exception e) {
+            return "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage();
+        }
     }
 }

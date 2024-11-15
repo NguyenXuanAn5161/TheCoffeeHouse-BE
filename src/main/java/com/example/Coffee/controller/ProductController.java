@@ -86,4 +86,64 @@ public class ProductController {
         }
         return new ResponseEntity<>(new ApiResponse<>(result), HttpStatus.NOT_FOUND);
     }
+
+    @PostMapping("/test-upload-image")
+    public ResponseEntity<ApiResponse<String>> testUploadImage(@RequestParam("image") MultipartFile image) {
+        try {
+            // Kiểm tra xem file ảnh có được gửi lên không
+            if (image.isEmpty()) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "File ảnh không được để trống", null), HttpStatus.BAD_REQUEST);
+            }
+
+            // Gọi service để upload ảnh lên Imgur (hoặc xử lý theo cách khác)
+            ResponseEntity<String> response = productService.uploadImage(image);
+            System.out.println("check image upload: " + response);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return new ResponseEntity<>(new ApiResponse<>(true, "Tải ảnh lên thành công", response.getBody()), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Tải ảnh lên thất bại", null), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>(false, "Có lỗi xảy ra khi tải ảnh lên: " + e.getMessage(), null),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // API: Tạo mới sản phẩm với link ảnh
+    @PostMapping("/create-with-link")
+    public ResponseEntity<ApiResponse<String>> createProductWithLink(@RequestParam("name") String name,
+                                                                     @RequestParam("description") String description,
+                                                                     @RequestParam("quantity") int quantity,
+                                                                     @RequestParam("category") String category,
+                                                                     @RequestParam("imageUrl") String imageUrl,  // Nhận link ảnh thay vì MultipartFile
+                                                                     @RequestParam("sizeS") Double sizeS,
+                                                                     @RequestParam("sizeM") Double sizeM,
+                                                                     @RequestParam("sizeL") Double sizeL) {
+        try {
+            // Kiểm tra xem link ảnh có hợp lệ không
+            if (imageUrl == null || imageUrl.isEmpty()) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Link ảnh không được để trống", null), HttpStatus.BAD_REQUEST);
+            }
+
+            // Tạo một map giá cho từng kích thước
+            Map<String, Double> sizePrice = new HashMap<>();
+            sizePrice.put("S", sizeS);
+            sizePrice.put("M", sizeM);
+            sizePrice.put("L", sizeL);
+
+            // Gọi service để thêm sản phẩm vào cơ sở dữ liệu
+            String result = productService.createProductWithLinkImg(name, description, quantity, sizePrice, category, imageUrl);  // Gọi service với link ảnh
+
+            if (result.equals("Sản phẩm đã được tạo thành công")) {
+                return new ResponseEntity<>(new ApiResponse<>(true, result, null), HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>(new ApiResponse<>(false, result, null), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>("Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
