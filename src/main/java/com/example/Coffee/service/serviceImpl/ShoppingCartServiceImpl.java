@@ -95,17 +95,61 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart updateCartItem(Long userId, Long cartItemId, int quantity) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm này!"));
+        // Tìm CartItem dựa vào ID
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm này trong giỏ hàng!"));
+
+        // Kiểm tra nếu CartItem thuộc về giỏ hàng của user
+        if (!cartItem.getCart().getUser().getId().equals(userId)) {
+            throw new RuntimeException("Sản phẩm không thuộc về giỏ hàng của người dùng này");
+        }
+
+        // Lấy thông tin sản phẩm từ CartItem
+        Product product = cartItem.getProduct();
+
+        // Kiểm tra tính hợp lệ của số lượng (phải lớn hơn 0)
+        if (quantity <= 0) {
+            throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0");
+        }
+
+        // Kiểm tra tồn kho của sản phẩm
+        if (quantity > product.getQuantity()) {
+            throw new RuntimeException("Số lượng sản phẩm vượt quá tồn kho hiện tại (" + product.getQuantity() + ")");
+        }
+
+        // Cập nhật số lượng sản phẩm trong CartItem
         cartItem.setQuantity(quantity);
         cartItemRepository.save(cartItem);
 
+        // Cập nhật thời gian chỉnh sửa giỏ hàng
+        ShoppingCart cart = cartItem.getCart();
+        cart.setUpdatedAt(new Date());
+        shoppingCartRepository.save(cart);
+
+        // Trả về giỏ hàng đã cập nhật
         return shoppingCartRepository.findByUserId(userId);
     }
 
     @Override
     public void removeCartItem(Long userId, Long cartItemId) {
-        cartItemRepository.deleteById(cartItemId);
+        try {
+            // Kiểm tra nếu CartItem tồn tại
+            CartItem cartItem = cartItemRepository.findById(cartItemId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng"));
+
+            // Kiểm tra nếu CartItem thuộc về giỏ hàng của user
+            if (!cartItem.getCart().getUser().getId().equals(userId)) {
+                throw new RuntimeException("Sản phẩm không thuộc về giỏ hàng của người dùng này");
+            }
+
+            // Tiến hành xóa CartItem
+            cartItemRepository.deleteById(cartItemId);
+        } catch (Exception e) {
+            // Xử lý lỗi: ném lỗi ra ngoài hoặc ghi lại lỗi trong log
+            throw new RuntimeException("Xóa sản phẩm thất bại: " + e.getMessage());
+        }
     }
+
 
     @Override
     public void clearCart(Long userId) {

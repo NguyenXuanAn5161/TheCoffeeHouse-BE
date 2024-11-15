@@ -70,23 +70,34 @@ public class ShoppingCartController {
     }
 
 
-    // API: Cập nhật số lượng sản phẩm trong giỏ hàng sử dụng RequestParam
+    // API: Cập nhật số lượng sản phẩm trong giỏ hàng
     @PutMapping("/{userId}/update/{itemId}")
     public ResponseEntity<ApiResponse<ShoppingCart>> updateItem(
             @PathVariable Long userId,
             @PathVariable Long itemId,
             @RequestParam("quantity") int quantity) {
 
-        ShoppingCart updatedCart = shoppingCartService.updateCartItem(userId, itemId, quantity);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật số lượng sản phẩm thành công", updatedCart));
+        try {
+            shoppingCartService.updateCartItem(userId, itemId, quantity);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật số lượng sản phẩm thành công", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
+
 
     // API: Xóa một sản phẩm khỏi giỏ hàng
     @DeleteMapping("/{userId}/remove/{itemId}")
     public ResponseEntity<ApiResponse<String>> removeItem(@PathVariable Long userId, @PathVariable Long itemId) {
-        shoppingCartService.removeCartItem(userId, itemId);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Sản phẩm đã được xóa khỏi giỏ hàng", null));
+        try {
+            shoppingCartService.removeCartItem(userId, itemId);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Sản phẩm đã được xóa khỏi giỏ hàng", null));
+        } catch (Exception e) {
+            // Trả về lỗi nếu có
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
+
 
     // API: Xóa toàn bộ giỏ hàng
     @DeleteMapping("/{userId}/clear")
