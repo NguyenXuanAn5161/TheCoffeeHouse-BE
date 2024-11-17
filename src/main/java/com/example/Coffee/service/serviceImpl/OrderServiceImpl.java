@@ -80,24 +80,113 @@ public class OrderServiceImpl implements OrderService {
                     item.getProduct().getName(),
                     item.getSize(),
                     item.getQuantity(),
-                    item.getPrice()
+                    item.getPrice(),
+                    item.getProduct().getImageUrl() // Thêm URL hình ảnh sản phẩm
             ));
         }
 
-        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), itemResponses);
+        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), order.getCreatedAt(), itemResponses);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
+        // Lấy thông tin đơn hàng từ ID
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        // Kiểm tra thứ tự chuyển trạng thái
+        if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELED) {
+            throw new IllegalArgumentException("Không thể thay đổi trạng thái đơn hàng khi đã giao hoặc đã hủy.");
+        }
+
+        if (order.getStatus() == OrderStatus.PENDING && status != OrderStatus.PROCESSING) {
+            throw new IllegalArgumentException("Chỉ có thể chuyển trạng thái từ PENDING sang PROCESSING.");
+        }
+
+        if (order.getStatus() == OrderStatus.PROCESSING && status != OrderStatus.SHIPPED) {
+            throw new IllegalArgumentException("Chỉ có thể chuyển trạng thái từ PROCESSING sang SHIPPED.");
+        }
+
+        if (order.getStatus() == OrderStatus.SHIPPED && status != OrderStatus.DELIVERED) {
+            throw new IllegalArgumentException("Chỉ có thể chuyển trạng thái từ SHIPPED sang DELIVERED.");
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        order.setStatus(status);
+        orderRepository.save(order);
+
+        // Chuẩn bị dữ liệu trả về
+        List<OrderItemResponse> itemResponses = new ArrayList<>();
+        for (OrderItem item : order.getOrderItems()) {
+            itemResponses.add(new OrderItemResponse(
+                    item.getProduct().getName(),
+                    item.getSize(),
+                    item.getQuantity(),
+                    item.getPrice(),
+                    item.getProduct().getImageUrl()
+            ));
+        }
+
+        return new OrderResponse(
+                order.getId(),
+                order.getTotalPrice(),
+                order.getStatus(),
+                order.getCreatedAt(),
+                itemResponses
+        );
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId) {
+        // Lấy thông tin đơn hàng từ ID
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        // Kiểm tra điều kiện hủy đơn hàng
+        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            throw new IllegalArgumentException("Không thể hủy đơn hàng khi đã giao hoặc đang vận chuyển.");
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new IllegalArgumentException("Đơn hàng này đã bị hủy trước đó.");
+        }
+
+        // Cập nhật trạng thái đơn hàng thành CANCELED
+        order.setStatus(OrderStatus.CANCELED);
+        order.setUpdatedAt(new Date());
+        orderRepository.save(order);
+
+        // Chuẩn bị dữ liệu trả về
+        List<OrderItemResponse> itemResponses = new ArrayList<>();
+        for (OrderItem item : order.getOrderItems()) {
+            itemResponses.add(new OrderItemResponse(
+                    item.getProduct().getName(),
+                    item.getSize(),
+                    item.getQuantity(),
+                    item.getPrice(),
+                    item.getProduct().getImageUrl()
+            ));
+        }
+
+        return new OrderResponse(
+                order.getId(),
+                order.getTotalPrice(),
+                order.getStatus(),
+                order.getCreatedAt(),
+                itemResponses
+        );
     }
 
     @Override
     public List<OrderResponse> getUserOrders(Long userId) {
-        // Lấy người dùng từ userId
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
 
-        // Lấy tất cả đơn hàng của người dùng
         List<Order> orders = orderRepository.findByUser(user);
-
-        // Chuyển đổi đơn hàng thành OrderResponse để trả về cho người dùng
         List<OrderResponse> orderResponses = new ArrayList<>();
+
         for (Order order : orders) {
             List<OrderItemResponse> itemResponses = new ArrayList<>();
             for (OrderItem item : order.getOrderItems()) {
@@ -105,13 +194,16 @@ public class OrderServiceImpl implements OrderService {
                         item.getProduct().getName(),
                         item.getSize(),
                         item.getQuantity(),
-                        item.getPrice()
+                        item.getPrice(),
+                        item.getProduct().getImageUrl() // Thêm URL hình ảnh sản phẩm
                 ));
             }
+
             orderResponses.add(new OrderResponse(
                     order.getId(),
                     order.getTotalPrice(),
                     order.getStatus(),
+                    order.getCreatedAt(), // Thêm thời gian tạo đơn hàng
                     itemResponses
             ));
         }

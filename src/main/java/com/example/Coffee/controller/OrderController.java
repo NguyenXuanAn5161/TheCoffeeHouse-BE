@@ -2,6 +2,7 @@ package com.example.Coffee.controller;
 
 import com.example.Coffee.dto.OrderItemRequest;
 import com.example.Coffee.dto.OrderResponse;
+import com.example.Coffee.model.enums.OrderStatus;
 import com.example.Coffee.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,30 @@ public class OrderController {
             return orderService.getUserOrders(userId);
         } catch (Exception e) {
             throw new RuntimeException("Không thể lấy đơn hàng của người dùng: " + e.getMessage());
+        }
+    }
+
+    // API để cập nhật trạng thái đơn hàng
+    @PutMapping("/{orderId}/status")
+    public OrderResponse updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam OrderStatus status) {
+        try {
+            return orderService.updateOrderStatus(orderId, status);
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể cập nhật trạng thái đơn hàng: " + e.getMessage());
+        }
+    }
+
+    // API để hủy đơn hàng
+    @PutMapping("/{orderId}/cancel")
+    public OrderResponse cancelOrder(@PathVariable Long orderId) {
+        try {
+            return orderService.cancelOrder(orderId);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Không thể hủy đơn hàng: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Đã xảy ra lỗi khi hủy đơn hàng: " + e.getMessage());
         }
     }
 }
