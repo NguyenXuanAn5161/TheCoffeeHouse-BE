@@ -166,8 +166,8 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
 
         // Kiểm tra điều kiện hủy đơn hàng
-        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
-            throw new IllegalArgumentException("Không thể hủy đơn hàng khi đã giao hoặc đang vận chuyển.");
+        if ( order.getStatus() == OrderStatus.PROCESSING || order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            throw new IllegalArgumentException("Không thể hủy đơn hàng khi đã xác nhận hoặc đã giao hoặc đang vận chuyển.");
         }
 
         if (order.getStatus() == OrderStatus.CANCELED) {
