@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderItemRequest {
+    private Long cartItemId;
     private Long productId;
     private String size;
     private int quantity;

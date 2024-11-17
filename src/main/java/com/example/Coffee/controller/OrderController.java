@@ -1,5 +1,6 @@
 package com.example.Coffee.controller;
 
+import com.example.Coffee.dto.ApiResponse;
 import com.example.Coffee.dto.OrderItemRequest;
 import com.example.Coffee.dto.OrderResponse;
 import com.example.Coffee.model.enums.OrderStatus;
@@ -16,49 +17,59 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    // API tạo đơn hàng
     @PostMapping("/create")
-    public ResponseEntity<?> createOrder(@RequestParam Long userId, @RequestBody List<OrderItemRequest> orderItemRequests) {
+    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
+            @RequestParam Long userId,
+            @RequestBody List<OrderItemRequest> orderItemRequests) {
         try {
-            OrderResponse response = orderService.createOrder(userId, orderItemRequests);
-            return ResponseEntity.ok(response);
+            orderService.createOrder(userId, orderItemRequests);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đặt hàng thành công!", null));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Đã xảy ra lỗi khi tạo đơn hàng.");
+            return ResponseEntity.internalServerError().body(new ApiResponse<>(false, "Đã xảy ra lỗi khi tạo đơn hàng.", null));
         }
     }
 
-    // Phương thức GET để lấy danh sách đơn hàng của người dùng
+    // API lấy danh sách đơn hàng của người dùng
     @GetMapping("/{userId}")
-    public List<OrderResponse> getUserOrders(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getUserOrders(@PathVariable Long userId) {
         try {
-            return orderService.getUserOrders(userId);
+            List<OrderResponse> orders = orderService.getUserOrders(userId);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Lấy danh sách đơn hàng thành công!", orders));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
-            throw new RuntimeException("Không thể lấy đơn hàng của người dùng: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(new ApiResponse<>(false, "Không thể lấy danh sách đơn hàng.", null));
         }
     }
 
-    // API để cập nhật trạng thái đơn hàng
+    // API cập nhật trạng thái đơn hàng
     @PutMapping("/{orderId}/status")
-    public OrderResponse updateOrderStatus(
+    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam OrderStatus status) {
         try {
-            return orderService.updateOrderStatus(orderId, status);
+            OrderResponse updatedOrder = orderService.updateOrderStatus(orderId, status);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật trạng thái đơn hàng thành công!", updatedOrder));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
-            throw new RuntimeException("Không thể cập nhật trạng thái đơn hàng: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(new ApiResponse<>(false, "Không thể cập nhật trạng thái đơn hàng.", null));
         }
     }
 
-    // API để hủy đơn hàng
+    // API hủy đơn hàng
     @PutMapping("/{orderId}/cancel")
-    public OrderResponse cancelOrder(@PathVariable Long orderId) {
+    public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(@PathVariable Long orderId) {
         try {
-            return orderService.cancelOrder(orderId);
+            OrderResponse canceledOrder = orderService.cancelOrder(orderId);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Hủy đơn hàng thành công!", canceledOrder));
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Không thể hủy đơn hàng: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
-            throw new RuntimeException("Đã xảy ra lỗi khi hủy đơn hàng: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(new ApiResponse<>(false, "Đã xảy ra lỗi khi hủy đơn hàng.", null));
         }
     }
 }

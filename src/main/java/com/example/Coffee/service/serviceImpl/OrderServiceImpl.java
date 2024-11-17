@@ -8,6 +8,7 @@ import com.example.Coffee.model.enums.OrderStatus;
 import com.example.Coffee.model.enums.PaymentMethod;
 import com.example.Coffee.repository.*;
 import com.example.Coffee.service.OrderService;
+import com.example.Coffee.service.ShoppingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -30,6 +31,12 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
+    @Autowired
+    private ShoppingCartService shoppingCartService;
+
     @Transactional
     @Override
     public OrderResponse createOrder(Long userId, List<OrderItemRequest> orderItemRequests) {
@@ -41,6 +48,12 @@ public class OrderServiceImpl implements OrderService {
         }
 
         PaymentMethod paymentMethod = orderItemRequests.getFirst().getPaymentMethod();
+
+        // Tìm ShoppingCart của người dùng
+        ShoppingCart shoppingCart = shoppingCartRepository.findByUserId(userId);
+        if (shoppingCart == null) {
+            throw new RuntimeException("Không tìm thấy giỏ hàng của người dùng này");
+        }
 
         Order order = new Order();
         order.setUser(user);
@@ -72,6 +85,9 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
             totalPrice += price * itemRequest.getQuantity();
+
+            // Xóa sản phẩm khỏi giỏ hàng bằng phương thức removeCartItem
+            shoppingCartService.removeCartItem(userId, itemRequest.getCartItemId());
         }
 
         order.setOrderItems(orderItems);
