@@ -1,6 +1,7 @@
 package com.example.Coffee.dto;
 
 import com.example.Coffee.model.enums.OrderStatus;
+import com.example.Coffee.model.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,4 +18,5 @@ public class OrderResponse {
     private OrderStatus status;
     private Date createdAt;
     private List<OrderItemResponse> items;
+    private PaymentMethod paymentMethod;
 }

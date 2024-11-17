@@ -1,6 +1,7 @@
 package com.example.Coffee.model;
 
 import com.example.Coffee.model.enums.OrderStatus;
+import com.example.Coffee.model.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,5 +37,8 @@ public class Order {
     // Thông tin thanh toán
     private double totalPrice;
     private boolean isPaid; // Xác định đơn hàng đã thanh toán chưa
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod; // Phương thức thanh toán
 }
 

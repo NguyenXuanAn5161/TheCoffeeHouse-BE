@@ -5,6 +5,7 @@ import com.example.Coffee.dto.OrderItemResponse;
 import com.example.Coffee.dto.OrderResponse;
 import com.example.Coffee.model.*;
 import com.example.Coffee.model.enums.OrderStatus;
+import com.example.Coffee.model.enums.PaymentMethod;
 import com.example.Coffee.repository.*;
 import com.example.Coffee.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +40,15 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Danh sách sản phẩm đặt hàng không được để trống.");
         }
 
+        PaymentMethod paymentMethod = orderItemRequests.getFirst().getPaymentMethod();
+
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
         order.setCreatedAt(new Date());
         order.setUpdatedAt(new Date());
         order.setPaid(false);
+        order.setPaymentMethod(paymentMethod);
 
         List<OrderItem> orderItems = new ArrayList<>();
         double totalPrice = 0;
@@ -85,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
             ));
         }
 
-        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), order.getCreatedAt(), itemResponses);
+        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), order.getCreatedAt(), itemResponses, order.getPaymentMethod());
     }
 
     @Override
@@ -133,7 +137,8 @@ public class OrderServiceImpl implements OrderService {
                 order.getTotalPrice(),
                 order.getStatus(),
                 order.getCreatedAt(),
-                itemResponses
+                itemResponses,
+                order.getPaymentMethod()
         );
     }
 
@@ -175,7 +180,8 @@ public class OrderServiceImpl implements OrderService {
                 order.getTotalPrice(),
                 order.getStatus(),
                 order.getCreatedAt(),
-                itemResponses
+                itemResponses,
+                order.getPaymentMethod()
         );
     }
 
@@ -204,7 +210,8 @@ public class OrderServiceImpl implements OrderService {
                     order.getTotalPrice(),
                     order.getStatus(),
                     order.getCreatedAt(), // Thêm thời gian tạo đơn hàng
-                    itemResponses
+                    itemResponses,
+                    order.getPaymentMethod()
             ));
         }
 
