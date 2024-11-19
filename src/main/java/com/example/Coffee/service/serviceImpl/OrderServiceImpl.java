@@ -9,6 +9,7 @@ import com.example.Coffee.model.enums.PaymentMethod;
 import com.example.Coffee.repository.*;
 import com.example.Coffee.service.OrderService;
 import com.example.Coffee.service.ShoppingCartService;
+import com.example.Coffee.webSocket.WebSocketHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -36,6 +37,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ShoppingCartService shoppingCartService;
+
+    @Autowired
+    private WebSocketHandlerImpl webSocketHandler;
 
     @Transactional
     @Override
@@ -110,7 +114,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status, Long userId) {
         // Lấy thông tin đơn hàng từ ID
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
@@ -148,6 +152,9 @@ public class OrderServiceImpl implements OrderService {
             ));
         }
 
+        // Cập nhật trạng thái đơn hàng và gửi thông báo qua WebSocket
+        webSocketHandler.sendOrderStatusUpdate(userId.toString(), "Trạng thái đơn hàng đã thay đổi: " + status);
+
         return new OrderResponse(
                 order.getId(),
                 order.getTotalPrice(),
@@ -166,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
 
         // Kiểm tra điều kiện hủy đơn hàng
-        if ( order.getStatus() == OrderStatus.PROCESSING || order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+        if (order.getStatus() == OrderStatus.PROCESSING || order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
             throw new IllegalArgumentException("Không thể hủy đơn hàng khi đã xác nhận hoặc đã giao hoặc đang vận chuyển.");
         }
 

@@ -49,9 +49,10 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestParam OrderStatus status) {
+            @RequestParam OrderStatus status,
+            @RequestParam Long userId) {
         try {
-            OrderResponse updatedOrder = orderService.updateOrderStatus(orderId, status);
+            OrderResponse updatedOrder = orderService.updateOrderStatus(orderId, status, userId);
             return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật trạng thái đơn hàng thành công!", updatedOrder));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
