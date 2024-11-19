@@ -17,6 +17,7 @@ public class OrderResponse {
     private double totalPrice;
     private OrderStatus status;
     private Date createdAt;
+    private Date updatedAt;
     private List<OrderItemResponse> items;
     private PaymentMethod paymentMethod;
 }

@@ -1,5 +1,7 @@
 package com.example.Coffee.webSocket;
 
+import com.example.Coffee.dto.OrderResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -42,7 +44,7 @@ public class WebSocketHandlerImpl implements WebSocketHandler {
     }
 
     // Gửi thông báo trạng thái đơn hàng đến đúng người dùng
-    public void sendOrderStatusUpdate(String userId, String orderStatus) {
+    public void sendOrderStatusUpdate(String userId, OrderResponse orderResponse) {
         System.out.println("Danh sách userSessions hiện tại: " + userSessions.keySet());
 
         WebSocketSession session = userSessions.get(userId);
@@ -51,8 +53,11 @@ public class WebSocketHandlerImpl implements WebSocketHandler {
             System.out.println("Session tồn tại cho userId: " + userId);
             if (session.isOpen()) {
                 try {
-                    session.sendMessage(new TextMessage(orderStatus));
-                    System.out.println("Thông báo đã được gửi: " + orderStatus);
+                    // Chuyển đổi orderResponse thành chuỗi JSON
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String jsonMessage = objectMapper.writeValueAsString(orderResponse);
+                    session.sendMessage(new TextMessage(jsonMessage));
+                    System.out.println("Thông báo đã được gửi: " + jsonMessage);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

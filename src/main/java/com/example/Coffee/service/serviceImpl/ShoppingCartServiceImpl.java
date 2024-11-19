@@ -10,6 +10,7 @@ import com.example.Coffee.repository.ProductRepository;
 import com.example.Coffee.repository.ShoppingCartRepository;
 import com.example.Coffee.repository.UserRepository;
 import com.example.Coffee.service.ShoppingCartService;
+import com.example.Coffee.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +51,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             cart = new ShoppingCart();
             cart.setUser(user);
             cart.setItems(new ArrayList<>());
-            cart.setCreatedAt(new Date());
-            cart.setUpdatedAt(new Date());
+            cart.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            cart.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
 
             // Lưu ShoppingCart trước khi thêm CartItem
             shoppingCartRepository.save(cart);
@@ -87,7 +88,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         }
 
         // Cập nhật thời gian của ShoppingCart
-        cart.setUpdatedAt(new Date());
+        cart.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         shoppingCartRepository.save(cart);
 
         return cart;
@@ -123,7 +124,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         // Cập nhật thời gian chỉnh sửa giỏ hàng
         ShoppingCart cart = cartItem.getCart();
-        cart.setUpdatedAt(new Date());
+        cart.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         shoppingCartRepository.save(cart);
 
         // Trả về giỏ hàng đã cập nhật
@@ -167,7 +168,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         // Xóa danh sách items khỏi ShoppingCart và cập nhật thời gian
         shoppingCart.getItems().clear();
-        shoppingCart.setUpdatedAt(new Date());
+        shoppingCart.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
 
         // Lưu ShoppingCart sau khi xóa toàn bộ CartItem
         shoppingCartRepository.save(shoppingCart);

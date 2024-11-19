@@ -3,6 +3,7 @@ package com.example.Coffee.service.serviceImpl;
 import com.example.Coffee.model.Product;
 import com.example.Coffee.repository.ProductRepository;
 import com.example.Coffee.service.ProductService;
+import com.example.Coffee.utils.DateUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +58,8 @@ public class ProductServiceImpl implements ProductService {
             product.setSizePrice(sizePrice); // Đặt thông tin size và giá
             product.setCategory(category);
             product.setImageUrl(link);
-            product.setCreatedAt(new Date());
-            product.setUpdatedAt(new Date());
+            product.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            product.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
 
             // Lưu sản phẩm vào cơ sở dữ liệu
             productRepository.save(product);
@@ -149,8 +150,8 @@ public class ProductServiceImpl implements ProductService {
             product.setSizePrice(sizePrice);  // Set thông tin size và giá
             product.setCategory(category);
             product.setImageUrl(imageUrl);  // Set link ảnh
-            product.setCreatedAt(new java.util.Date());
-            product.setUpdatedAt(new java.util.Date());
+            product.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            product.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
 
             // Lưu sản phẩm vào cơ sở dữ liệu
             productRepository.save(product);

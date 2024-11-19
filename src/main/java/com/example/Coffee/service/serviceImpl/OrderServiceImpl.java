@@ -9,6 +9,7 @@ import com.example.Coffee.model.enums.PaymentMethod;
 import com.example.Coffee.repository.*;
 import com.example.Coffee.service.OrderService;
 import com.example.Coffee.service.ShoppingCartService;
+import com.example.Coffee.utils.DateUtils;
 import com.example.Coffee.webSocket.WebSocketHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,8 +63,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
-        order.setCreatedAt(new Date());
-        order.setUpdatedAt(new Date());
+        order.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
+        order.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         order.setPaid(false);
         order.setPaymentMethod(paymentMethod);
 
@@ -109,7 +110,7 @@ public class OrderServiceImpl implements OrderService {
             ));
         }
 
-        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), order.getCreatedAt(), itemResponses, order.getPaymentMethod());
+        return new OrderResponse(order.getId(), totalPrice, order.getStatus(), order.getCreatedAt(), order.getUpdatedAt(), itemResponses, order.getPaymentMethod());
     }
 
     @Override
@@ -138,6 +139,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Cập nhật trạng thái đơn hàng
         order.setStatus(status);
+        order.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         orderRepository.save(order);
 
         // Chuẩn bị dữ liệu trả về
@@ -152,17 +154,20 @@ public class OrderServiceImpl implements OrderService {
             ));
         }
 
-        // Cập nhật trạng thái đơn hàng và gửi thông báo qua WebSocket
-        webSocketHandler.sendOrderStatusUpdate(userId.toString(), "Trạng thái đơn hàng đã thay đổi: " + status);
-
-        return new OrderResponse(
+        OrderResponse orderResponse = new OrderResponse(
                 order.getId(),
                 order.getTotalPrice(),
                 order.getStatus(),
                 order.getCreatedAt(),
+                order.getUpdatedAt(),
                 itemResponses,
                 order.getPaymentMethod()
         );
+
+        // Cập nhật trạng thái đơn hàng và gửi thông báo qua WebSocket
+        webSocketHandler.sendOrderStatusUpdate(userId.toString(), orderResponse);
+
+        return orderResponse;
     }
 
     @Override
@@ -183,7 +188,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Cập nhật trạng thái đơn hàng thành CANCELED
         order.setStatus(OrderStatus.CANCELED);
-        order.setUpdatedAt(new Date());
+        order.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         orderRepository.save(order);
 
         // Chuẩn bị dữ liệu trả về
@@ -203,6 +208,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getTotalPrice(),
                 order.getStatus(),
                 order.getCreatedAt(),
+                order.getUpdatedAt(),
                 itemResponses,
                 order.getPaymentMethod()
         );
@@ -233,6 +239,7 @@ public class OrderServiceImpl implements OrderService {
                     order.getTotalPrice(),
                     order.getStatus(),
                     order.getCreatedAt(), // Thêm thời gian tạo đơn hàng
+                    order.getUpdatedAt(),
                     itemResponses,
                     order.getPaymentMethod()
             ));
