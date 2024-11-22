@@ -2,6 +2,7 @@ package com.example.Coffee.controller;
 
 import com.example.Coffee.dto.CartItemDto;
 import com.example.Coffee.dto.ShoppingCartDto;
+import com.example.Coffee.model.CartItem;
 import com.example.Coffee.model.ShoppingCart;
 import com.example.Coffee.dto.ApiResponse;
 import com.example.Coffee.service.ShoppingCartService;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -29,6 +31,7 @@ public class ShoppingCartController {
 
             // Chuyển đổi từ List<CartItem> sang List<CartItemDto>
             List<CartItemDto> cartItemsDto = cart.getItems().stream()
+                    .sorted(Comparator.comparing(CartItem::getQuantity).reversed())
                     .map(item -> new CartItemDto(
                             item.getId(),
                             item.getProduct().getImageUrl(),
@@ -36,7 +39,8 @@ public class ShoppingCartController {
                             item.getProduct().getName(),
                             item.getSize(),
                             item.getQuantity(),
-                            item.getPrice()
+                            item.getPrice(),
+                            item.getUpdatedAt()
                     ))
                     .toList();
 

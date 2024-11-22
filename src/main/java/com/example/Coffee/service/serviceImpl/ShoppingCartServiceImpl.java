@@ -70,6 +70,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if (existingItem != null) {
             // Nếu đã tồn tại, cộng dồn số lượng
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
+            existingItem.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
             cartItemRepository.save(existingItem);
         } else {
             // Nếu chưa tồn tại, tạo mới CartItem
@@ -79,6 +80,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             newItem.setQuantity(quantity);
             newItem.setPrice(product.getSizePrice().get(size));
             newItem.setCart(cart);  // Set liên kết với ShoppingCart đã được lưu
+            newItem.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
 
             // Lưu CartItem mới
             cartItemRepository.save(newItem);

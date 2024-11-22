@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -25,4 +27,7 @@ public class CartItem {
     @ManyToOne
     @JoinColumn(name = "cart_id")
     private ShoppingCart cart;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
 }
