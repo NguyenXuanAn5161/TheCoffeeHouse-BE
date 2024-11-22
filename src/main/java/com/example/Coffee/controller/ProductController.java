@@ -3,12 +3,16 @@ package com.example.Coffee.controller;
 import com.example.Coffee.dto.ApiResponse;
 import com.example.Coffee.model.Product;
 import com.example.Coffee.service.ProductService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +146,28 @@ public class ProductController {
             return new ResponseEntity<>(new ApiResponse<>(false, result, null), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse<>("Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/addFromFile")
+    public ResponseEntity<ApiResponse<String>> addProductFromFile(@RequestParam("file") MultipartFile file) {
+        try {
+            // Kiểm tra nếu file có tên hợp lệ
+            if (file.isEmpty() || file.getOriginalFilename() == null) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Không có tệp nào được tải lên", null), HttpStatus.BAD_REQUEST);
+            }
+
+            // Gọi service để thêm sản phẩm từ dữ liệu
+            ResponseEntity<String> result = productService.addProductsFromFile(file);
+
+            // Trả lại danh sách sản phẩm đã được thêm vào cơ sở dữ liệu
+            if (result.getStatusCode() == HttpStatus.OK) {
+                return new ResponseEntity<>(new ApiResponse<>(true, "Danh sách đã được thêm thành công!", null), HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>(new ApiResponse<>(false, "Thêm danh sách thất bại!", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IOException e) {
+            return new ResponseEntity<>(new ApiResponse<>(false, "Có lỗi xảy ra khi thêm danh sách sản phẩm: " + e.getMessage(), null),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

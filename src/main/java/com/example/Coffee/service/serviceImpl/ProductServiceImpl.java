@@ -11,10 +11,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
     private static final String CLIENT_ID = "YOUR_IMGUR_CLIENT_ID"; // Thay bằng Client ID của bạn
 
     @Override
-    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadImage(MultipartFile file) {
         try {
             // Chuyển file thành byte array
             byte[] fileBytes = file.getBytes();
@@ -160,4 +159,26 @@ public class ProductServiceImpl implements ProductService {
             return "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage();
         }
     }
+
+    @Override
+    public ResponseEntity<String> addProductsFromFile(MultipartFile file) throws IOException {
+        // Đọc dữ liệu từ file JSON mà không cần lưu file
+        String fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);  // Chuyển nội dung file thành chuỗi
+        System.out.println("File content: " + fileContent);  // In nội dung ra console (hoặc log)
+
+        // Bạn có thể chuyển đổi dữ liệu từ JSON thành đối tượng Product
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Product> products = objectMapper.readValue(fileContent, objectMapper.getTypeFactory().constructCollectionType(List.class, Product.class));
+
+        // Vòng lặp call đến method create 1 product
+        products.forEach(product -> {
+            // Tạo đối tượng Product
+            product.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            product.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
+        });
+
+        productRepository.saveAll(products);
+        return ResponseEntity.ok(null);
+    }
+
 }
