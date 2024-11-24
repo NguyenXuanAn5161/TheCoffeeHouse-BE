@@ -80,6 +80,11 @@ public class OrderServiceImpl implements OrderService {
                 throw new RuntimeException("Kích thước sản phẩm không hợp lệ: " + itemRequest.getSize());
             }
 
+            // Kiểm tra số lượng sản phẩm trong kho có đủ không
+            if (product.getQuantity() < itemRequest.getQuantity()) {
+                throw new RuntimeException("Số lượng sản phẩm không đủ: " + product.getName());
+            }
+
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setProduct(product);
@@ -93,6 +98,10 @@ public class OrderServiceImpl implements OrderService {
 
             // Xóa sản phẩm khỏi giỏ hàng bằng phương thức removeCartItem
             shoppingCartService.removeCartItem(userId, itemRequest.getCartItemId());
+
+            // Trừ số lượng sản phẩm trong kho
+            product.setQuantity(product.getQuantity() - itemRequest.getQuantity());
+            productRepository.save(product);
         }
 
         order.setOrderItems(orderItems);
@@ -190,6 +199,13 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELED);
         order.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
         orderRepository.save(order);
+
+        // Hoàn trả số lượng sản phẩm
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            product.setQuantity(product.getQuantity() + item.getQuantity()); // Trả lại số lượng
+            productRepository.save(product); // Lưu lại thay đổi trong database
+        }
 
         // Chuẩn bị dữ liệu trả về
         List<OrderItemResponse> itemResponses = new ArrayList<>();
