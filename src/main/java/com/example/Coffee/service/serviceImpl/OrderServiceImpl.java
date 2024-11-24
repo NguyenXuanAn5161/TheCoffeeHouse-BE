@@ -236,6 +236,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
 
         List<Order> orders = orderRepository.findByUser(user);
+
+        // Sắp xếp danh sách orders theo updatedAt (mới nhất lên đầu)
+        orders.sort((o1, o2) -> o2.getUpdatedAt().compareTo(o1.getUpdatedAt()));
+
         List<OrderResponse> orderResponses = new ArrayList<>();
 
         for (Order order : orders) {
