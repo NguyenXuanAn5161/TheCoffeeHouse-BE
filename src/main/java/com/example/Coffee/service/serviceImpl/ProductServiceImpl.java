@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -200,6 +201,22 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.saveAll(products);
         return ResponseEntity.ok(null);
+    }
+
+    // Chạy vào lúc 00:00 mỗi ngày
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updateExpiredProducts() {
+        List<Product> products = productRepository.findAll();
+        Date currentDate = new Date();
+
+        for (Product product : products) {
+            // Kiểm tra nếu `newUntil` đã hết hạn
+            if (product.getNewUntil() != null && currentDate.after(product.getNewUntil())) {
+                // Nếu hết hạn, cập nhật `isNew` thành false
+                product.setIsNew(false);
+                productRepository.save(product);  // Lưu lại sản phẩm đã cập nhật
+            }
+        }
     }
 
 }
