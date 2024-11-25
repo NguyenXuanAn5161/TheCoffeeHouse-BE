@@ -35,10 +35,18 @@ public class ProductController {
     public ResponseEntity<ApiResponse<List<Product>>> getProductFilter(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestBody(required = false) ProductFilterDto filter) {
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "isNew", required = false) Boolean isNew) {
         try {
             // Tạo đối tượng Pageable với số trang và kích thước trang
             Pageable pageable = PageRequest.of(page, size);
+
+            // Tạo đối tượng filter từ query parameters
+            ProductFilterDto filter = new ProductFilterDto();
+            filter.setName(name);
+            filter.setCategory(category);
+            filter.setIsNew(isNew);
 
             Page<Product> products = productService.getProducts(filter, pageable);
 
