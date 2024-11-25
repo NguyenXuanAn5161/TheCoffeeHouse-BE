@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,8 +35,8 @@ public class ProductServiceImpl implements ProductService {
     private ObjectMapper jacksonObjectMapper;
 
     @Override
-    public List<Product> getProductFilter(ProductFilterDto filter) {
-        return productRepository.findAll((root, query, criteriaBuilder)-> {
+    public Page<Product> getProducts(ProductFilterDto filter, Pageable pageable) {
+        return productRepository.findAll((root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // Lọc theo `isNew`
@@ -47,8 +49,13 @@ public class ProductServiceImpl implements ProductService {
                 predicates.add(criteriaBuilder.equal(root.get("category"), filter.getCategory()));
             }
 
+            // Lọc theo `name`
+            if (filter.getName() != null && !filter.getName().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("name"), "%" + filter.getName() + "%"));
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        });
+        }, pageable);
     }
 
     @Override

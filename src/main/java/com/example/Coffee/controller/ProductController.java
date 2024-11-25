@@ -6,6 +6,9 @@ import com.example.Coffee.model.Product;
 import com.example.Coffee.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,14 +31,23 @@ public class ProductController {
     private ProductService productService;
 
     // API: lấy danh sách sản phẩm theo filter
-    @PostMapping("/filter")
-    public ResponseEntity<ApiResponse<List<Product>>> getProductFilter(@RequestBody ProductFilterDto filter) {
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Product>>> getProductFilter(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestBody(required = false) ProductFilterDto filter) {
         try {
-            List<Product> products = productService.getProductFilter(filter);
-            if(products.isEmpty()) {
-                return new ResponseEntity<>(new ApiResponse<>("Không có sản phẩm nào."), HttpStatus.NO_CONTENT);
+            // Tạo đối tượng Pageable với số trang và kích thước trang
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<Product> products = productService.getProducts(filter, pageable);
+
+            System.out.println("products: " + products.getContent().isEmpty());
+
+            if (products.getContent().isEmpty()) {
+                return new ResponseEntity<>(new ApiResponse<>(true, "Không có sản phẩm nào.",  products.getContent(), products.getTotalPages(), products.getTotalElements()), HttpStatus.OK);
             }
-            return new ResponseEntity<>(new ApiResponse<>(true, "Lấy danh sách sản phẩm thành công", products), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Lấy danh sách sản phẩm thành công!", products.getContent(), products.getTotalPages(), products.getTotalElements()), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse<>(false, "Có lỗi xảy ra khi lọc sản phẩm: " + e.getMessage(), null),
                     HttpStatus.INTERNAL_SERVER_ERROR);
