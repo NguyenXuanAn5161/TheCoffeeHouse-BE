@@ -30,6 +30,13 @@ public class Product {
     @Column(name = "price")
     private Map<String, Double> sizePrice; // Ví dụ: {"S": 30.0, "M": 35.0, "L": 40.0}
 
+    // Trạng thái sản phẩm mới
+    private Boolean isNew = false;
+
+    // Thời hạn sản phẩm mới
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date newUntil;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 

@@ -1,6 +1,7 @@
 package com.example.Coffee.controller;
 
 import com.example.Coffee.dto.ApiResponse;
+import com.example.Coffee.dto.filter.ProductFilterDto;
 import com.example.Coffee.model.Product;
 import com.example.Coffee.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +27,19 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
-
-    // API: Lấy danh sách sản phẩm
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        if (products.isEmpty()) {
-            return new ResponseEntity<>(new ApiResponse<>("Không có sản phẩm nào."), HttpStatus.NO_CONTENT);
+    // API: lấy danh sách sản phẩm theo filter
+    @PostMapping("/filter")
+    public ResponseEntity<ApiResponse<List<Product>>> getProductFilter(@RequestBody ProductFilterDto filter) {
+        try {
+            List<Product> products = productService.getProductFilter(filter);
+            if(products.isEmpty()) {
+                return new ResponseEntity<>(new ApiResponse<>("Không có sản phẩm nào."), HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(new ApiResponse<>(true, "Lấy danh sách sản phẩm thành công", products), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>(false, "Có lỗi xảy ra khi lọc sản phẩm: " + e.getMessage(), null),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(new ApiResponse<>(true, "Lấy danh sách sản phẩm thành công", products), HttpStatus.OK);
     }
 
     // API: Tạo mới sản phẩm
@@ -45,7 +51,9 @@ public class ProductController {
                                                              @RequestParam("image") MultipartFile image,
                                                              @RequestParam("sizeS") Double sizeS,
                                                              @RequestParam("sizeM") Double sizeM,
-                                                             @RequestParam("sizeL") Double sizeL) {
+                                                             @RequestParam("sizeL") Double sizeL,
+                                                             @RequestParam(value = "isNew", required = false, defaultValue = "false") Boolean isNew,
+                                                             @RequestParam(value = "newUntil", required = false) String newUntilStr) {
         try {
             // Kiểm tra xem file ảnh có được gửi lên không
             if (image.isEmpty()) {
@@ -58,8 +66,16 @@ public class ProductController {
             sizePrice.put("M", sizeM);
             sizePrice.put("L", sizeL);
 
+            // Chuyển đổi `newUntilStr` (String) thành `Date`
+            Date newUntil = null;
+            if (isNew) {
+                if (newUntilStr != null && !newUntilStr.isEmpty()) {
+                    newUntil = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newUntilStr);
+                }
+            }
+
             // Gọi service để thêm sản phẩm vào cơ sở dữ liệu
-            String result = productService.createProduct(name, description, quantity, sizePrice, category, image);
+            String result = productService.createProduct(name, description, quantity, sizePrice, category, image, isNew, newUntil);
 
             if (result.equals("Sản phẩm đã được tạo thành công")) {
                 return new ResponseEntity<>(new ApiResponse<>(true, result, null), HttpStatus.CREATED);
@@ -124,7 +140,9 @@ public class ProductController {
                                                                      @RequestParam("imageUrl") String imageUrl,  // Nhận link ảnh thay vì MultipartFile
                                                                      @RequestParam("sizeS") Double sizeS,
                                                                      @RequestParam("sizeM") Double sizeM,
-                                                                     @RequestParam("sizeL") Double sizeL) {
+                                                                     @RequestParam("sizeL") Double sizeL,
+                                                                     @RequestParam(value = "isNew", required = false, defaultValue = "false") Boolean isNew,
+                                                                     @RequestParam(value = "newUntil", required = false) String newUntilStr) {
         try {
             // Kiểm tra xem link ảnh có hợp lệ không
             if (imageUrl == null || imageUrl.isEmpty()) {
@@ -137,8 +155,16 @@ public class ProductController {
             sizePrice.put("M", sizeM);
             sizePrice.put("L", sizeL);
 
+            // Chuyển đổi `newUntilStr` (String) thành `Date`
+            Date newUntil = null;
+            if (isNew) {
+                if (newUntilStr != null && !newUntilStr.isEmpty()) {
+                    newUntil = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newUntilStr);
+                }
+            }
+
             // Gọi service để thêm sản phẩm vào cơ sở dữ liệu
-            String result = productService.createProductWithLinkImg(name, description, quantity, sizePrice, category, imageUrl);  // Gọi service với link ảnh
+            String result = productService.createProductWithLinkImg(name, description, quantity, sizePrice, category, imageUrl, isNew, newUntil);  // Gọi service với link ảnh
 
             if (result.equals("Sản phẩm đã được tạo thành công")) {
                 return new ResponseEntity<>(new ApiResponse<>(true, result, null), HttpStatus.CREATED);

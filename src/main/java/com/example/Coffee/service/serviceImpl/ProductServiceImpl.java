@@ -1,11 +1,13 @@
 package com.example.Coffee.service.serviceImpl;
 
+import com.example.Coffee.dto.filter.ProductFilterDto;
 import com.example.Coffee.model.Product;
 import com.example.Coffee.repository.ProductRepository;
 import com.example.Coffee.service.ProductService;
 import com.example.Coffee.utils.DateUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -30,8 +32,22 @@ public class ProductServiceImpl implements ProductService {
     private ObjectMapper jacksonObjectMapper;
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<Product> getProductFilter(ProductFilterDto filter) {
+        return productRepository.findAll((root, query, criteriaBuilder)-> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Lọc theo `isNew`
+            if (filter.getIsNew() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isNew"), filter.getIsNew()));
+            }
+
+            // Lọc theo `category`
+            if (filter.getCategory() != null && !filter.getCategory().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("category"), filter.getCategory()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        });
     }
 
     @Override
@@ -43,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
     // Method to handle creating product and storing image
     @Override
     public String createProduct(String name, String description, int quantity,
-                                Map<String, Double> sizePrice, String category, MultipartFile image) {
+                                Map<String, Double> sizePrice, String category, MultipartFile image, Boolean isNew, Date newUntil) {
         try {
             // Upload hình ảnh lên Imgur
             ResponseEntity<String> imageUrlResponse = uploadImage(image);
@@ -59,6 +75,9 @@ public class ProductServiceImpl implements ProductService {
             product.setImageUrl(link);
             product.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
             product.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            // Gán giá trị `isNew` và `newUntil`
+            product.setIsNew(isNew);
+            product.setNewUntil(newUntil);
 
             // Lưu sản phẩm vào cơ sở dữ liệu
             productRepository.save(product);
@@ -139,7 +158,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String createProductWithLinkImg(String name, String description, int quantity, Map<String, Double> sizePrice, String category, String imageUrl) {
+    public String createProductWithLinkImg(String name, String description, int quantity, Map<String, Double> sizePrice, String category, String imageUrl, Boolean isNew, Date newUntil ) {
         try {
             // Tạo đối tượng Product
             Product product = new Product();
@@ -151,6 +170,8 @@ public class ProductServiceImpl implements ProductService {
             product.setImageUrl(imageUrl);  // Set link ảnh
             product.setCreatedAt(DateUtils.addHoursToDate(new Date(), 7));
             product.setUpdatedAt(DateUtils.addHoursToDate(new Date(), 7));
+            product.setIsNew(isNew);
+            product.setNewUntil(newUntil);
 
             // Lưu sản phẩm vào cơ sở dữ liệu
             productRepository.save(product);
@@ -166,7 +187,7 @@ public class ProductServiceImpl implements ProductService {
         String fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);  // Chuyển nội dung file thành chuỗi
         System.out.println("File content: " + fileContent);  // In nội dung ra console (hoặc log)
 
-        // Bạn có thể chuyển đổi dữ liệu từ JSON thành đối tượng Product
+        // Chuyển đổi dữ liệu từ JSON thành đối tượng Product
         ObjectMapper objectMapper = new ObjectMapper();
         List<Product> products = objectMapper.readValue(fileContent, objectMapper.getTypeFactory().constructCollectionType(List.class, Product.class));
 
